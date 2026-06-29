@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A11y Checker — Accessibility scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="site-header">
+        <div class="wrap">
+            <h1>A11y Checker</h1>
+            <p class="tagline">A quick scan for common accessibility issues — missing alt text, unlabeled form fields, heading structure, and more.</p>
+        </div>
+    </header>
+
+    <main id="main-content" class="wrap">
+        <section class="check-form" aria-labelledby="form-heading">
+            <h2 id="form-heading">Check a page</h2>
+            <form method="post" novalidate>
+                <div class="field">
+                    <label for="url">Page URL</label>
+                    <input type="url" id="url" name="url" placeholder="https://example.com" value="{{ url_value }}">
+                </div>
+
+                <p class="or-divider" aria-hidden="true">or</p>
+
+                <div class="field">
+                    <label for="html">Paste HTML directly</label>
+                    <textarea id="html" name="html" rows="8" placeholder="&lt;html&gt;...&lt;/html&gt;">{{ html_value }}</textarea>
+                </div>
+
+                <button type="submit">Run check</button>
+            </form>
+        </section>
+
+        {% if error %}
+        <section class="error-banner" role="alert">
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if report %}
+        <section class="results" aria-labelledby="results-heading">
+            <h2 id="results-heading">Results for {{ report.source }}</h2>
+
+            <div class="score-summary">
+                <div class="score-circle score-{{ 'good' if report.score >= 80 else ('mid' if report.score >= 50 else 'poor') }}">
+                    <span class="score-number">{{ report.score }}</span>
+                    <span class="score-label">/ 100</span>
+                </div>
+                <dl class="counts">
+                    <div class="count-item count-error">
+                        <dt>Errors</dt>
+                        <dd>{{ report.error_count }}</dd>
+                    </div>
+                    <div class="count-item count-warning">
+                        <dt>Warnings</dt>
+                        <dd>{{ report.warning_count }}</dd>
+                    </div>
+                    <div class="count-item count-info">
+                        <dt>Info</dt>
+                        <dd>{{ report.info_count }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            {% if report.issues %}
+            <ul class="issue-list">
+                {% for issue in report.issues %}
+                <li class="issue issue-{{ issue.severity.value }}">
+                    <span class="issue-badge">{{ issue.severity.value }}</span>
+                    <div class="issue-body">
+                        <p class="issue-message">{{ issue.message }}</p>
+                        <p class="issue-ref">{{ issue.wcag_ref }}</p>
+                        {% if issue.element %}
+                        <p class="issue-element"><code>{{ issue.element }}</code></p>
+                        {% endif %}
+                        {% if issue.suggestion %}
+                        <p class="issue-suggestion"><strong>Fix:</strong> {{ issue.suggestion }}</p>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-issues">No issues found by the automated checks. Nice work.</p>
+            {% endif %}
+
+            <p class="disclaimer">
+                Automated checks like this one catch a useful subset of accessibility issues,
+                but they can't replace a manual review or testing with real assistive technology.
+            </p>
+        </section>
+        {% endif %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap">
+            <p>A11y Checker — open source on <a href="https://github.com/Calplexable/a11y-checker">GitHub</a>.</p>
+        </div>
+    </footer>
+</body>
+</html>
